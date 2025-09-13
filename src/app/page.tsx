@@ -8,7 +8,7 @@ export default function Home() {
   const { isAuthenticated, isLoading } = useConvexAuth();
   useEffect(() => {
     if (isAuthenticated) {
-      redirect("/dashboard/client-only");
+      redirect("/dashboard");
     } else {
       redirect("/sign-in");
     }

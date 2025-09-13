@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/next-theme/theme-provider";
-import Navbar from "@/components/Navigator/navbar";
+
 import { ConvexClientProvider } from "./ConvexClientProvider";
 
 const inter = Inter({

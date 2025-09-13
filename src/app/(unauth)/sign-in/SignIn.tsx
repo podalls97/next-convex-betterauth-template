@@ -448,11 +448,11 @@ export default function SignIn() {
           <p className="text-center text-xs text-neutral-500">
             Powered by{" "}
             <Link
-              href="https://ptisbetong.my"
+              href="https://better-auth.com"
               className="underline"
               target="_blank"
             >
-              <span className="dark:text-orange-200/90">PTIS Betong</span>
+              <span className="dark:text-orange-200/90">better-auth</span>
             </Link>
           </p>
         </div>
