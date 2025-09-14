@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/a/uy24lm300a/**", // Allows any path under this hostname
       },
+      {
+        protocol: "https", // Or 'http' if that's what your URLs use
+        hostname: "avatars.githubusercontent.com",
+        port: "",
+        pathname: "/**", // Allows any path under this hostname
+      }
       // You can add other hostnames here if needed
       // Example:
       // {
