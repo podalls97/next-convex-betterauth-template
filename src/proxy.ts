@@ -22,7 +22,7 @@ const getSession = async (request: NextRequest) => {
 const signInRoutes = ["/sign-in", "/sign-up", "/verify-2fa"];
 
 // Just check cookie, recommended approach
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   const sessionCookie = getSessionCookie(request);
   // Uncomment to fetch the session (not recommended)
   // const session = await getSession(request);

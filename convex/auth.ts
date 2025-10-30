@@ -1,56 +1,57 @@
 import {
-  AuthFunctions,
-  BetterAuth,
-  PublicAuthFunctions,
+  createClient,
 } from "@convex-dev/better-auth";
-import { api, components, internal } from "./_generated/api";
+import { components } from "./_generated/api";
 import { query } from "./_generated/server";
 import { DataModel, Id } from "./_generated/dataModel";
 import { asyncMap } from "convex-helpers";
 
-const authFunctions: AuthFunctions = internal.auth;
-const publicAuthFunctions: PublicAuthFunctions = api.auth;
-
-export const betterAuthComponent = new BetterAuth(components.betterAuth, {
-  authFunctions,
-  publicAuthFunctions,
+export const betterAuthComponent = createClient(components.betterAuth, {
   verbose: false,
-});
+  triggers: {
+    user: {
+      onCreate: async (ctx, user) => {
+        // Example: copy the user's email to the application users table.
+        await ctx.db.insert("users", {
+          email: user.email,
+        });
+      },
+      onUpdate: async (ctx, newUser, oldUser) => {
+        // Keep the user's email synced
+        const appUser = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", oldUser.email))
+          .first();
 
-export const {
-  createUser,
-  deleteUser,
-  updateUser,
-  createSession,
-  isAuthenticated,
-} = betterAuthComponent.createAuthFunctions<DataModel>({
-  onCreateUser: async (ctx, user) => {
-    // Example: copy the user's email to the application users table.
-    // We'll use onUpdateUser to keep it synced.
-    const userId = await ctx.db.insert("users", {
-      email: user.email,
-    });
+        if (appUser && appUser._id) {
+          await ctx.db.patch(appUser._id as Id<"users">, {
+            email: newUser.email,
+          });
+        }
+      },
+      onDelete: async (ctx, user) => {
+        // Delete the user's application data
+        const appUser = await ctx.db
+          .query("users")
+          .withIndex("email", (q) => q.eq("email", user.email))
+          .first();
 
-    // This function must return the user id.
-    return userId;
-  },
-  onDeleteUser: async (ctx, userId) => {
-    // Delete the user's data if the user is being deleted
-    const todos = await ctx.db
-      .query("todos")
-      .withIndex("userId", (q) => q.eq("userId", userId as Id<"users">))
-      .collect();
-    await asyncMap(todos, async (todo) => {
-      await ctx.db.delete(todo._id);
-    });
-    await ctx.db.delete(userId as Id<"users">);
-  },
-  onUpdateUser: async (ctx, user) => {
-    // Keep the user's email synced
-    const userId = user.userId as Id<"users">;
-    await ctx.db.patch(userId, {
-      email: user.email,
-    });
+        if (appUser && appUser._id) {
+          // Delete the user's todos
+          const todos = await ctx.db
+            .query("todos")
+            .withIndex("userId", (q) => q.eq("userId", appUser._id as Id<"users">))
+            .collect();
+          await asyncMap(todos, async (todo) => {
+            if (todo && todo._id) {
+              await ctx.db.delete(todo._id as Id<"todos">);
+            }
+          });
+          // Delete the user
+          await ctx.db.delete(appUser._id as Id<"users">);
+        }
+      },
+    },
   },
 });
 
@@ -60,16 +61,28 @@ export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
     // Get user data from Better Auth - email, name, image, etc.
-    const userMetadata = await betterAuthComponent.getAuthUser(ctx);
-    if (!userMetadata) {
+    const betterAuthUser = await betterAuthComponent.safeGetAuthUser(ctx as any);
+    if (!betterAuthUser) {
       return null;
     }
-    // Get user data from your application's database (skip this if you have no
-    // fields in your users table schema)
-    const user = await ctx.db.get(userMetadata.userId as Id<"users">);
+
+    // Get user data from your application's database
+    const appUser = await ctx.db
+      .query("users")
+      .withIndex("email", (q) => q.eq("email", betterAuthUser.email))
+      .first();
+
+    // If no app user found, just return the Better Auth user data
+    if (!appUser) {
+      console.warn(`No app user found for email: ${betterAuthUser.email}`);
+      return betterAuthUser;
+    }
+
+    // Merge app user data with Better Auth user data
+    // Better Auth data takes precedence for fields like email, name, image
     return {
-      ...user,
-      ...userMetadata,
+      ...appUser,
+      ...betterAuthUser,
     };
   },
 });
