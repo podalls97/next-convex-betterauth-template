@@ -1,0 +1,261 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Tech Stack
+
+- **Next.js 16.0.1** (App Router with Turbopack) - React 19.2.0
+- **Convex** - Real-time backend database and functions
+- **Better Auth** - Authentication system with email verification, 2FA, magic links, and OAuth
+- **TypeScript** - Full type safety throughout
+- **Tailwind CSS v4** - Styling with dark mode support
+- **Radix UI** - Accessible component primitives
+- **pnpm** - Package manager
+
+## Development Commands
+
+### Starting the Application
+```bash
+# Start both Convex backend and Next.js frontend (recommended)
+pnpm dev
+
+# Start only frontend (requires Convex to be running separately)
+pnpm dev:frontend
+
+# Start only Convex backend
+pnpm dev:backend
+# or run once and exit:
+pnpm convex dev --once
+```
+
+### Building and Deployment
+```bash
+# Production build
+pnpm build
+
+# Start production server
+pnpm start
+
+# Lint
+pnpm lint
+
+# Deploy Convex to production
+pnpm convex deploy
+```
+
+### Convex Environment Management
+```bash
+# Set development environment variables
+pnpm convex env set VARIABLE_NAME value
+
+# Set production environment variables
+pnpm convex env set VARIABLE_NAME value --prod
+
+# List environment variables
+pnpm convex env list
+```
+
+## Convex MCP Tools (AI Assistant Integration)
+
+This project has the **Convex MCP server** installed, providing AI assistants with direct access to the Convex backend. See `@convex-mcp.md` for details.
+
+### Available MCP Tools
+
+**Prefer using MCP tools over bash commands when working with Convex** - they provide structured data and better error handling.
+
+- **Deployment**: Use `status` tool to select your deployment
+- **Tables**: Use `tables` tool to view schemas, `data` tool to browse table contents, `runOneoffQuery` for custom read-only queries
+- **Functions**: Use `functionSpec` to see available functions, `run` to execute them, `logs` to view execution logs
+- **Environment**: Use `envList`, `envGet`, `envSet`, `envRemove` instead of bash `convex env` commands
+
+These tools provide structured access to Convex data and are more reliable than parsing CLI output.
+
+## Architecture Overview
+
+### Authentication Flow
+
+This application uses a **dual-system authentication architecture**:
+
+1. **Better Auth** (`src/lib/auth.ts`) - Server-side auth configuration running on Convex
+   - Configures providers (Google, GitHub, Slack), email verification, password reset
+   - Defines all auth options including 2FA, magic links, email OTP
+   - Exports `createAuth(ctx)` which must receive Convex context
+
+2. **Better Auth Client** (`src/lib/auth-client.ts`) - Client-side auth instance
+   - React hooks and client methods for auth operations
+   - Exports `authClient` used in components for sign in/out, session management
+   - Plugins must match server-side configuration
+
+3. **Convex Auth Component** (`convex/auth.ts`) - Connects Better Auth to Convex database
+   - `betterAuthComponent` - handles database operations for auth
+   - `onCreateUser` - creates application user record when auth user is created
+   - `onDeleteUser` - cascade deletes user data (todos, etc.)
+   - `onUpdateUser` - keeps email field synced between auth and app user tables
+   - `getCurrentUser` - merges Better Auth user metadata with application user data
+
+4. **HTTP Routes** (`convex/http.ts`) - Registers Better Auth API endpoints
+   - Must call `betterAuthComponent.registerRoutes(http, createAuth)`
+   - Handles `/api/auth/*` endpoints through Convex
+
+5. **Proxy Protection** (`src/proxy.ts`) - Route protection middleware (renamed from middleware.ts in Next.js 16)
+   - Uses cookie-based session checking (recommended approach)
+   - Redirects unauthenticated users to `/sign-in`
+   - Redirects authenticated users from auth pages to `/dashboard`
+   - Matcher excludes static assets, `_next`, and `api/auth` routes
+
+### Key Authentication Concepts
+
+- **Session checking**: `proxy.ts` uses `getSessionCookie()` for performance (recommended over fetching full session)
+- **User data split**: Auth metadata (email, name, image) lives in Better Auth tables; application data lives in `users` table
+- **Lifecycle hooks**: `onCreateUser`, `onDeleteUser`, `onUpdateUser` keep application user table in sync with auth system
+- **Plugin synchronization**: Client plugins (`src/lib/auth-client.ts`) must match server plugins (`src/lib/auth.ts`)
+
+### Convex Integration
+
+**Client Setup** (`src/app/ConvexClientProvider.tsx`):
+- `ConvexReactClient` - connects to Convex backend using `NEXT_PUBLIC_CONVEX_URL`
+- `ConvexBetterAuthProvider` - wraps app with both Convex and auth context
+- Must wrap all client components that use `useQuery`, `useMutation`, or auth hooks
+
+**Database Schema** (`convex/schema.ts`):
+- Application tables defined here (e.g., `users`, `todos`)
+- Better Auth tables auto-generated by `@convex-dev/better-auth`
+- Indexes required for efficient queries (e.g., `userId` index on todos)
+
+**Querying Data**:
+```typescript
+// In client components
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+
+const data = useQuery(api.moduleName.functionName, { args });
+const mutate = useMutation(api.moduleName.functionName);
+```
+
+### Route Structure
+
+```
+src/app/
+├── (auth)/           # Protected routes - requires authentication
+│   ├── dashboard/    # Main user dashboard
+│   └── settings/     # User settings (2FA, profile)
+├── (unauth)/         # Public auth routes
+│   ├── sign-in/      # Login page
+│   ├── sign-up/      # Registration page
+│   └── verify-2fa/   # 2FA verification
+└── api/auth/[...all]/ # Next.js API route that delegates to Convex (via Better Auth)
+```
+
+Route groups `(auth)` and `(unauth)` organize routes without affecting URLs. Proxy handles protection logic.
+
+### Email System
+
+Emails are sent through Convex using `@convex-dev/resend`:
+- `convex/email.tsx` - Email templates using `@react-email/components`
+- Functions: `sendEmailVerification`, `sendResetPassword`, `sendMagicLink`, `sendOTPVerification`
+- Called from `src/lib/auth.ts` auth configuration callbacks
+
+## Environment Variables
+
+### Required in `.env.local`:
+```bash
+# Convex (auto-generated after first deploy)
+CONVEX_DEPLOYMENT=automatic
+NEXT_PUBLIC_CONVEX_URL=https://example.convex.cloud
+NEXT_PUBLIC_CONVEX_SITE_URL=https://example.convex.site
+
+# Site URL
+SITE_URL=http://localhost:3000
+
+# Better Auth Secret (generate with: openssl rand -base64 32)
+BETTER_AUTH_SECRET=
+
+# OAuth Providers (optional)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+```
+
+### Must also be set in Convex:
+```bash
+pnpm convex env set SITE_URL http://localhost:3000
+pnpm convex env set BETTER_AUTH_SECRET your-secret
+pnpm convex env set GOOGLE_CLIENT_ID your-id
+pnpm convex env set GOOGLE_CLIENT_SECRET your-secret
+# etc.
+```
+
+**Critical**: Environment variables must be set in BOTH `.env.local` (for Next.js) AND Convex (for backend functions).
+
+## Adding/Removing Auth Providers
+
+When modifying authentication providers:
+
+1. **Update `src/lib/auth.ts`**:
+   - Add/remove provider in `socialProviders` section
+   - For generic OAuth: add to `genericOAuth({ config: [...] })`
+
+2. **Update `src/lib/auth-client.ts`**:
+   - Add/remove corresponding client plugin (e.g., `genericOAuthClient()`)
+
+3. **Environment Variables**:
+   - Add `PROVIDER_CLIENT_ID` and `PROVIDER_CLIENT_SECRET` to both `.env.local` and Convex
+   - Use `pnpm convex env set` for Convex variables
+
+4. **Update UI Components**:
+   - Add provider buttons in sign-in/sign-up pages if needed
+
+Example providers included: Google, GitHub, Slack (via genericOAuth), plus anonymous, magic link, email OTP, and 2FA.
+
+## Important File Locations
+
+- `src/proxy.ts` - Route protection (Next.js 16 renamed from middleware.ts)
+- `convex/auth.config.ts` - Better Auth domain configuration
+- `convex/schema.ts` - Application database schema
+- `convex/polyfills.ts` - Required polyfills for Better Auth in Convex environment
+- `next.config.ts` - Next.js configuration (images, remotePatterns)
+
+## Common Patterns
+
+### Creating a New Protected Page
+1. Create `src/app/(auth)/page-name/page.tsx`
+2. Use `"use client"` directive if using hooks
+3. Import `useQuery(api.auth.getCurrentUser)` for current user
+4. Wrap content with `<AppContainer>` component (optional, for consistent layout)
+
+### Adding a Convex Function
+1. Create function in `convex/*.ts` file
+2. Export as `query`, `mutation`, or `action` from `convex/_generated/server`
+3. Import in client: `import { api } from "@/convex/_generated/api"`
+4. Use with: `useQuery(api.file.functionName)` or `useMutation(api.file.functionName)`
+
+### Accessing Current User
+```typescript
+// In client components
+const user = useQuery(api.auth.getCurrentUser);
+
+// In Convex functions
+const user = await betterAuthComponent.getAuthUser(ctx);
+```
+
+## Deployment Notes
+
+**Vercel Deployment**:
+- Build Command: `npx convex deploy --cmd 'pnpm run build'`
+- Install Command: `pnpm install`
+- Add all environment variables from `.env.local`
+- Set `CONVEX_DEPLOYMENT` to production key from Convex dashboard
+
+**Convex Production Variables**:
+```bash
+pnpm convex env set SITE_URL https://your-domain.com --prod
+pnpm convex env set BETTER_AUTH_SECRET your-prod-secret --prod
+# etc. for all required variables
+```
+
+## Next.js 16 Specifics
+
+- **Turbopack is default** - no `--turbo` flag needed in dev/build commands
+- **Proxy pattern** - `src/proxy.ts` replaces `middleware.ts` (deprecated convention)
+- **React 19** - Using React 19.2.0 with async server components

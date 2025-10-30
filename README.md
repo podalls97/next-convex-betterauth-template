@@ -1,16 +1,50 @@
 # Next.js + Convex + Better Auth Template
 
-A modern, full-stack authentication template built with Next.js, Convex, and Better Auth. This template provides a complete authentication system with email verification, password reset, and 2FA support.
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.1-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.0-blue?style=flat&logo=react)](https://react.dev/)
+[![Convex](https://img.shields.io/badge/Convex-Realtime-orange?style=flat&logo=convex)](https://convex.dev/)
+[![Better Auth](https://img.shields.io/badge/Better%20Auth-Latest-green?style=flat)](https://better-auth.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A **production-ready**, full-stack authentication template built with Next.js 16, Convex, and Better Auth. This template provides a complete authentication system with multiple auth methods, real-time database, comprehensive documentation, and API reference.
+
+> **✨ New!** Built-in [Documentation](/documentation) and [API Reference](/api-reference) pages to help you get started quickly!
 
 ## 🚀 Features
 
-- ✅ **Complete Authentication System** - Sign up, sign in, email verification, password reset
-- ✅ **Two-Factor Authentication (2FA)** - TOTP-based 2FA support
-- ✅ **Protected Routes** - Automatic route protection with middleware
+### Authentication Methods
+- ✅ **Email/Password** - Traditional authentication with secure password handling
+- ✅ **OAuth Providers** - Google, GitHub, and Slack (via genericOAuth)
+- ✅ **Magic Links** - Passwordless authentication via email
+- ✅ **Email OTP** - One-time password verification
+- ✅ **Two-Factor Authentication (2FA)** - TOTP-based 2FA with QR codes and backup codes
+- ✅ **Anonymous Auth** - Guest access for users
+
+### Core Features
+- ✅ **Protected Routes** - Automatic route protection with Next.js 16 proxy pattern
+- ✅ **Email Verification** - Verify user emails with secure tokens
+- ✅ **Password Reset** - Secure password recovery flow
 - ✅ **Modern UI** - Beautiful, responsive design with dark mode support
 - ✅ **Type Safety** - Full TypeScript support with Convex
-- ✅ **Real-time Database** - Powered by Convex for real-time updates
-- ✅ **Email Templates** - Pre-built email templates for auth flows
+- ✅ **Real-time Database** - Powered by Convex for instant updates
+- ✅ **Email Templates** - Pre-built React Email templates for all auth flows
+
+### Developer Experience
+- ✅ **Comprehensive Documentation** - Built-in `/documentation` page with setup guides
+- ✅ **API Reference** - Full API documentation at `/api-reference` with code examples
+- ✅ **Claude AI Ready** - Includes `CLAUDE.md` for AI coding assistants
+- ✅ **TypeScript** - Full type safety throughout the stack
+- ✅ **Tailwind CSS v4** - Modern styling with utility classes
+- ✅ **Radix UI** - Accessible component primitives
+
+## 📖 Quick Links
+
+- 📚 **[Documentation](/documentation)** - Complete setup guide, architecture overview, and deployment instructions
+- 🔧 **[API Reference](/api-reference)** - Comprehensive API documentation with copy-paste examples
+- 🤖 **[CLAUDE.md](CLAUDE.md)** - Technical documentation for AI coding assistants
+- 💬 **[GitHub Issues](https://github.com/podalls97/next-convex-betterauth-template/issues)** - Report bugs or request features
+- ⭐ **[Star on GitHub](https://github.com/podalls97/next-convex-betterauth-template)** - Show your support!
 
 ## 📋 Prerequisites
 
@@ -24,7 +58,7 @@ Before you begin, ensure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/podalls97/next-convex-betterauth-template.git
 cd next-convex-betterauth-template
 ```
 
@@ -90,7 +124,7 @@ You'll need to set up the following services:
 **Option 1: Resend (Recommended)**
 - Sign up at [Resend](https://resend.com/)
 - Get your API key from the dashboard
-- Add `RESEND_API_KEY` to your environment variables
+- Add `RESEND_API_KEY` to your environment variables in Convex
 
 **Option 2: SMTP (Gmail/Outlook)**
 - For Gmail: Enable 2FA and create an App Password
@@ -98,9 +132,41 @@ You'll need to set up the following services:
 - Add SMTP variables to your environment
 
 #### 🔐 Better Auth Secret
-- Go to [Better Auth Installation](https://www.better-auth.com/docs/installation) and click "Generate Secret" to get your key
-- Or generate a secure random string (32+ characters) using: `openssl rand -base64 32`
-- Add to `BETTER_AUTH_SECRET`
+- Generate a secure random string using: `openssl rand -base64 32`
+- Add to `BETTER_AUTH_SECRET` in both `.env.local` and Convex
+
+#### 🔑 OAuth Providers (Optional)
+
+**Google OAuth**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to "APIs & Services" > "Credentials"
+4. Click "Create Credentials" > "OAuth 2.0 Client ID"
+5. Configure consent screen if prompted
+6. Set application type to "Web application"
+7. Add authorized redirect URIs:
+   - Development: `http://localhost:3000/api/auth/callback/google`
+   - Production: `https://yourdomain.com/api/auth/callback/google`
+8. Copy `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
+
+**GitHub OAuth**
+1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
+2. Click "New OAuth App"
+3. Fill in the details:
+   - Application name: Your app name
+   - Homepage URL: `http://localhost:3000` (dev) or your production URL
+   - Authorization callback URL:
+     - Development: `http://localhost:3000/api/auth/callback/github`
+     - Production: `https://yourdomain.com/api/auth/callback/github`
+4. Copy `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
+
+**Slack OAuth (via genericOAuth)**
+1. Go to [Slack API](https://api.slack.com/apps)
+2. Click "Create New App" > "From scratch"
+3. Configure OAuth & Permissions
+4. Add redirect URL: `http://localhost:3000/api/auth/callback/slack`
+5. Copy `SLACK_CLIENT_ID` and `SLACK_CLIENT_SECRET`
+6. Update `convex/auth.ts` and `src/lib/auth-client.ts` to include Slack configuration
 
 ### 5. Start Development
 
@@ -139,23 +205,32 @@ The `pnpm dev` command will:
 ```
 src/
 ├── app/
-│   ├── (auth)/          # Protected routes
-│   │   ├── dashboard/   # Main dashboard
-│   │   └── settings/    # User settings
-│   ├── (unauth)/        # Public routes
-│   │   ├── sign-in/     # Sign in page
-│   │   ├── sign-up/     # Sign up page
-│   │   └── verify-2fa/  # 2FA verification
-│   └── api/auth/        # Auth API routes
-├── components/          # Reusable components
-├── lib/                 # Utility functions
-└── middleware.ts        # Route protection
+│   ├── (auth)/              # Protected routes (requires authentication)
+│   │   ├── dashboard/       # Main user dashboard
+│   │   ├── settings/        # User settings (2FA, profile)
+│   │   ├── documentation/   # 📚 Built-in documentation page
+│   │   └── api-reference/   # 🔧 Built-in API reference
+│   ├── (unauth)/            # Public routes
+│   │   ├── sign-in/         # Sign in page
+│   │   ├── sign-up/         # Registration page
+│   │   ├── verify-2fa/      # 2FA verification
+│   │   └── reset-password/  # Password reset
+│   └── api/auth/[...all]/   # Next.js API route (delegates to Convex)
+├── components/
+│   ├── client/              # Client components
+│   └── server/              # Server components
+├── lib/
+│   ├── auth.ts              # Better Auth server configuration
+│   └── auth-client.ts       # Better Auth client hooks
+└── proxy.ts                 # Route protection (Next.js 16 proxy pattern)
 
 convex/
-├── auth.config.ts       # Better Auth configuration
-├── auth.ts             # Auth functions
-├── schema.ts           # Database schema
-└── emails/             # Email templates
+├── auth.config.ts           # Better Auth domain configuration
+├── auth.ts                  # Better Auth + Convex integration
+├── schema.ts                # Convex database schema
+├── http.ts                  # HTTP routes for Better Auth
+├── email.tsx                # Email templates (React Email)
+└── polyfills.ts             # Required for Better Auth in Convex
 ```
 
 ## 🔧 Adding New Pages

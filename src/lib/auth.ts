@@ -11,16 +11,24 @@ import {
 import { magicLink } from "better-auth/plugins";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { betterAuthComponent } from "../../convex/auth";
-import { requireEnv, requireMutationCtx } from "@convex-dev/better-auth/utils";
+import { requireMutationCtx } from "@convex-dev/better-auth/utils";
 import { GenericCtx } from "../../convex/_generated/server";
 
-const siteUrl = requireEnv("SITE_URL");
+const siteUrl = process.env.SITE_URL;
+if (!siteUrl) {
+  throw new Error("SITE_URL environment variable is required");
+}
 
 // Split out options so they can be passed to the convex plugin
 const createOptions = (ctx: GenericCtx) =>
   ({
     baseURL: siteUrl,
-    database: convexAdapter(ctx, betterAuthComponent),
+    database: betterAuthComponent.adapter(ctx as any),
+    secret: process.env.BETTER_AUTH_SECRET,
+    advanced: {
+      disableCSRFCheck: false,
+      useSecureCookies: process.env.NODE_ENV === "production",
+    },
     account: {
       accountLinking: {
         enabled: true,
@@ -29,7 +37,7 @@ const createOptions = (ctx: GenericCtx) =>
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmailVerification(requireMutationCtx(ctx), {
+        await sendEmailVerification(requireMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -39,7 +47,7 @@ const createOptions = (ctx: GenericCtx) =>
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
-        await sendResetPassword(requireMutationCtx(ctx), {
+        await sendResetPassword(requireMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -75,7 +83,7 @@ const createOptions = (ctx: GenericCtx) =>
       anonymous(),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
-          await sendMagicLink(requireMutationCtx(ctx), {
+          await sendMagicLink(requireMutationCtx(ctx) as any, {
             to: email,
             url,
           });
@@ -83,7 +91,7 @@ const createOptions = (ctx: GenericCtx) =>
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp }) {
-          await sendOTPVerification(requireMutationCtx(ctx), {
+          await sendOTPVerification(requireMutationCtx(ctx) as any, {
             to: email,
             code: otp,
           });
@@ -114,7 +122,7 @@ export const createAuth = (ctx: GenericCtx) => {
       // for plugins that customize the user or session schema.
       // See "Some caveats":
       // https://www.better-auth.com/docs/concepts/session-management#customizing-session-response
-      convex({ options }),
+      convex(),
     ],
   });
 };
