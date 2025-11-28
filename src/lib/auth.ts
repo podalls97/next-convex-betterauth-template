@@ -11,7 +11,7 @@ import {
 import { magicLink } from "better-auth/plugins";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { betterAuthComponent } from "../../convex/auth";
-import { requireMutationCtx } from "@convex-dev/better-auth/utils";
+import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
 import { GenericCtx } from "../../convex/_generated/server";
 
 const siteUrl = process.env.SITE_URL;
@@ -37,7 +37,7 @@ const createOptions = (ctx: GenericCtx) =>
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmailVerification(requireMutationCtx(ctx) as any, {
+        await sendEmailVerification(requireRunMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -47,7 +47,7 @@ const createOptions = (ctx: GenericCtx) =>
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }) => {
-        await sendResetPassword(requireMutationCtx(ctx) as any, {
+        await sendResetPassword(requireRunMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -83,7 +83,7 @@ const createOptions = (ctx: GenericCtx) =>
       anonymous(),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
-          await sendMagicLink(requireMutationCtx(ctx) as any, {
+          await sendMagicLink(requireRunMutationCtx(ctx) as any, {
             to: email,
             url,
           });
@@ -91,7 +91,7 @@ const createOptions = (ctx: GenericCtx) =>
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp }) {
-          await sendOTPVerification(requireMutationCtx(ctx) as any, {
+          await sendOTPVerification(requireRunMutationCtx(ctx) as any, {
             to: email,
             code: otp,
           });
