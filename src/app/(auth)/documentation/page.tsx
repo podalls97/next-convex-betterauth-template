@@ -1,43 +1,9 @@
-"use client";
+"use cache";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { Suspense } from "react";
 import Link from "next/link";
-import {
-  AppContainer,
-  AppHeader,
-  AppNav,
-  SettingsButton,
-  SettingsButtonContent,
-  UserProfile,
-} from "@/components/server";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { SignOutButton } from "@/components/client";
-
-const Header = () => {
-  const router = useRouter();
-  const user = useQuery(api.auth.getCurrentUser);
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    router.push("/sign-in");
-  };
-
-  return (
-    <AppHeader>
-      <UserProfile user={user} />
-      <AppNav>
-        <SettingsButton>
-          <Link href="/settings">
-            <SettingsButtonContent />
-          </Link>
-        </SettingsButton>
-        <SignOutButton onClick={handleSignOut} />
-      </AppNav>
-    </AppHeader>
-  );
-};
+import { AppContainer } from "@/components/server";
+import { DocumentationClient } from "./client";
 
 const DocSection = ({
   title,
@@ -62,6 +28,7 @@ const CodeBlock = ({ children }: { children: string }) => {
   );
 };
 
+// Cached documentation content
 const DocumentationContent = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -101,7 +68,10 @@ const DocumentationContent = () => {
 
         {/* Getting Started */}
         <DocSection title="Getting Started">
-          <p>Start the development server (runs both Convex backend and Next.js frontend):</p>
+          <p>
+            Start the development server (runs both Convex backend and Next.js
+            frontend):
+          </p>
           <CodeBlock>pnpm dev</CodeBlock>
 
           <p className="mt-4">Other useful commands:</p>
@@ -134,7 +104,8 @@ pnpm lint`}</CodeBlock>
 convex/
 ├── auth.ts          # Auth configuration
 ├── schema.ts        # Database schema
-└── http.ts          # HTTP endpoints`}</CodeBlock>
+├── http.ts          # HTTP endpoints
+└── users.ts         # Internal mutations`}</CodeBlock>
         </DocSection>
 
         {/* Creating Pages */}
@@ -157,8 +128,11 @@ export default function MyPage() {
   );
 }`}</CodeBlock>
           <p>
-            All pages in the <code className="bg-muted px-1.5 py-0.5 rounded text-xs">(auth)</code> directory
-            are automatically protected by the authentication proxy.
+            All pages in the{" "}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+              (auth)
+            </code>{" "}
+            directory are automatically protected by the authentication proxy.
           </p>
         </DocSection>
 
@@ -192,29 +166,58 @@ await authClient.signOut();`}</CodeBlock>
           <p>This template uses a dual-system authentication architecture:</p>
           <ul className="list-disc list-inside space-y-2 ml-4">
             <li>
-              <strong>Better Auth Server</strong> (<code className="bg-muted px-1.5 py-0.5 rounded text-xs">src/lib/auth.ts</code>):
-              Configures providers, email verification, 2FA, magic links
+              <strong>Better Auth Server</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                src/lib/auth.ts
+              </code>
+              ): Configures providers, email verification, 2FA, magic links
             </li>
             <li>
-              <strong>Better Auth Client</strong> (<code className="bg-muted px-1.5 py-0.5 rounded text-xs">src/lib/auth-client.ts</code>):
-              React hooks and client methods for auth operations
+              <strong>Better Auth Client</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                src/lib/auth-client.ts
+              </code>
+              ): React hooks and client methods for auth operations
             </li>
             <li>
-              <strong>Convex Auth Component</strong> (<code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/auth.ts</code>):
-              Connects Better Auth to Convex database with lifecycle hooks
+              <strong>Convex Auth Component</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/auth.ts
+              </code>
+              ): Connects Better Auth to Convex database
             </li>
             <li>
-              <strong>HTTP Routes</strong> (<code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/http.ts</code>):
-              Registers Better Auth API endpoints
+              <strong>User Syncing</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                src/lib/auth.ts
+              </code>{" "}
+              &{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/users.ts
+              </code>
+              ): Handles user synchronization via database hooks and internal
+              mutations
             </li>
             <li>
-              <strong>Route Protection</strong> (<code className="bg-muted px-1.5 py-0.5 rounded text-xs">src/proxy.ts</code>):
-              Middleware that protects routes and redirects unauthenticated users
+              <strong>HTTP Routes</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/http.ts
+              </code>
+              ): Registers Better Auth API endpoints
+            </li>
+            <li>
+              <strong>Route Protection</strong> (
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                src/proxy.ts
+              </code>
+              ): Middleware that protects routes and redirects unauthenticated
+              users
             </li>
           </ul>
           <p className="mt-4">
-            Authentication supports: Email/Password, Google OAuth, GitHub OAuth, Slack OAuth,
-            Magic Links, Email OTP, 2FA, and Anonymous authentication.
+            Authentication supports: Email/Password, Google OAuth, GitHub OAuth,
+            Slack OAuth, Magic Links, Email OTP, 2FA, and Anonymous
+            authentication.
           </p>
         </DocSection>
 
@@ -243,7 +246,9 @@ pnpm convex env set PROVIDER_CLIENT_ID your-id
 pnpm convex env set PROVIDER_CLIENT_SECRET your-secret`}</CodeBlock>
             </div>
             <div>
-              <p className="font-medium">4. Update UI components to add provider buttons</p>
+              <p className="font-medium">
+                4. Update UI components to add provider buttons
+              </p>
             </div>
           </div>
         </DocSection>
@@ -252,11 +257,18 @@ pnpm convex env set PROVIDER_CLIENT_SECRET your-secret`}</CodeBlock>
         <DocSection title="Environment Variables">
           <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 mb-4">
             <p className="font-medium text-yellow-900 dark:text-yellow-200">
-              ⚠️ Critical: Environment variables must be set in BOTH .env.local (for Next.js) AND Convex (for backend functions)
+              ⚠️ Critical: Environment variables must be set in BOTH .env.local
+              (for Next.js) AND Convex (for backend functions)
             </p>
           </div>
 
-          <p className="font-medium">Required in <code className="bg-muted px-1.5 py-0.5 rounded text-xs">.env.local</code>:</p>
+          <p className="font-medium">
+            Required in{" "}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+              .env.local
+            </code>
+            :
+          </p>
           <CodeBlock>{`# Convex (auto-generated after first deploy)
 CONVEX_DEPLOYMENT=automatic
 NEXT_PUBLIC_CONVEX_URL=https://example.convex.cloud
@@ -274,7 +286,9 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret`}</CodeBlock>
 
-          <p className="font-medium mt-4">Must also be set in Convex using these commands:</p>
+          <p className="font-medium mt-4">
+            Must also be set in Convex using these commands:
+          </p>
           <CodeBlock>{`# Generate auth secret first
 openssl rand -base64 32
 
@@ -292,9 +306,7 @@ pnpm convex env set GITHUB_CLIENT_SECRET your-github-client-secret
 pnpm convex env set SITE_URL https://your-domain.com --prod
 pnpm convex env set BETTER_AUTH_SECRET your-prod-secret --prod`}</CodeBlock>
 
-          <p className="mt-4">
-            List all Convex environment variables:
-          </p>
+          <p className="mt-4">List all Convex environment variables:</p>
           <CodeBlock>{`pnpm convex env list`}</CodeBlock>
         </DocSection>
 
@@ -328,13 +340,48 @@ pnpm convex env set GOOGLE_CLIENT_SECRET your-secret --prod
         {/* Important Files */}
         <DocSection title="Important File Locations">
           <ul className="list-disc list-inside space-y-1 ml-4">
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">src/proxy.ts</code> - Route protection middleware</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/auth.config.ts</code> - Better Auth domain configuration</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/schema.ts</code> - Database schema</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/polyfills.ts</code> - Required polyfills for Better Auth</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/email.tsx</code> - Email templates</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">next.config.ts</code> - Next.js configuration</li>
-            <li><code className="bg-muted px-1.5 py-0.5 rounded text-xs">CLAUDE.md</code> - Detailed technical documentation</li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                src/proxy.ts
+              </code>{" "}
+              - Route protection middleware
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/auth.config.ts
+              </code>{" "}
+              - Better Auth domain configuration
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/schema.ts
+              </code>{" "}
+              - Database schema
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/polyfills.ts
+              </code>{" "}
+              - Required polyfills for Better Auth
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/email.tsx
+              </code>{" "}
+              - Email templates
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                next.config.ts
+              </code>{" "}
+              - Next.js configuration
+            </li>
+            <li>
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                CLAUDE.md
+              </code>{" "}
+              - Detailed technical documentation
+            </li>
           </ul>
         </DocSection>
 
@@ -343,40 +390,284 @@ pnpm convex env set GOOGLE_CLIENT_SECRET your-secret --prod
           <ul className="list-disc list-inside space-y-1 ml-4">
             <li>Turbopack is the default bundler (no --turbo flag needed)</li>
             <li>Uses React 19 with async server components</li>
-            <li>Proxy pattern (src/proxy.ts) replaces old middleware.ts convention</li>
+            <li>
+              Proxy pattern (src/proxy.ts) replaces old middleware.ts convention
+            </li>
             <li>Full TypeScript support with strict type checking</li>
+            <li>
+              Cache Components enabled with &quot;use cache&quot; directive
+            </li>
           </ul>
+        </DocSection>
+
+        {/* Migration Changelog */}
+        <DocSection title="📋 Recent Updates (v1.3.34+)">
+          <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4 mb-4">
+            <p className="font-medium text-blue-900 dark:text-blue-200">
+              ℹ️ This section documents breaking changes from Better Auth
+              v1.3.34+ and @convex-dev/better-auth v0.9.6+
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            {/* Change 1: createClient */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <span className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded text-xs">
+                  Breaking
+                </span>
+                createClient Configuration
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                The{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  createClient
+                </code>{" "}
+                function no longer accepts a configuration object with triggers.
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-medium text-red-600 dark:text-red-400 mb-1">
+                    ❌ Before (Deprecated)
+                  </p>
+                  <CodeBlock>{`// convex/auth.ts
+export const betterAuthComponent = createClient(
+  components.betterAuth,
+  {
+    verbose: false,
+    triggers: {
+      user: {
+        onCreate: async (ctx, user) => {
+          await ctx.db.insert("users", {
+            email: user.email,
+          });
+        },
+        onDelete: async (ctx, user) => {
+          // cleanup logic
+        },
+      },
+    },
+  }
+);`}</CodeBlock>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                    ✅ After (Current)
+                  </p>
+                  <CodeBlock>{`// convex/auth.ts
+export const betterAuthComponent = 
+  createClient<DataModel>(
+    components.betterAuth
+  );
+
+// Triggers moved to databaseHooks
+// in src/lib/auth.ts`}</CodeBlock>
+                </div>
+              </div>
+            </div>
+
+            {/* Change 2: User Syncing */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <span className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 px-2 py-0.5 rounded text-xs">
+                  Migration
+                </span>
+                User Syncing via databaseHooks
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                User lifecycle hooks are now configured in{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  src/lib/auth.ts
+                </code>{" "}
+                using Better Auth&apos;s{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  databaseHooks
+                </code>{" "}
+                feature, with internal mutations in
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  convex/users.ts
+                </code>{" "}
+                for HTTP action contexts.
+              </p>
+              <div>
+                <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1">
+                  ✅ New Pattern
+                </p>
+                <CodeBlock>{`// src/lib/auth.ts
+const createOptions = (ctx: GenericCtx) => ({
+  // ... other options
+  databaseHooks: {
+    user: {
+      create: {
+        after: async (user) => {
+          // Use runMutation for HTTP actions
+          if ("runMutation" in ctx) {
+            await ctx.runMutation(
+              internal.users.syncUserCreation,
+              { email: user.email }
+            );
+          } else if ("db" in ctx) {
+            await (ctx as MutationCtx).db.insert(
+              "users",
+              { email: user.email }
+            );
+          }
+        },
+      },
+      delete: {
+        after: async (user) => {
+          // Similar pattern for deletion
+        },
+      },
+    },
+  },
+});`}</CodeBlock>
+              </div>
+            </div>
+
+            {/* Change 3: New File */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <h4 className="font-medium text-sm flex items-center gap-2">
+                <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded text-xs">
+                  New
+                </span>
+                convex/users.ts
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                A new file{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  convex/users.ts
+                </code>{" "}
+                was added to handle user syncing via internal mutations. This is
+                required because HTTP actions (OAuth callbacks) cannot directly
+                access{" "}
+                <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                  ctx.db
+                </code>
+                .
+              </p>
+              <CodeBlock>{`// convex/users.ts
+import { internalMutation } from "./_generated/server";
+import { v } from "convex/values";
+
+export const syncUserCreation = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("users", {
+      email: args.email,
+    });
+  },
+});
+
+export const syncUserDeletion = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, args) => {
+    // Find and delete user + related data
+  },
+});`}</CodeBlock>
+            </div>
+
+            {/* Why These Changes */}
+            <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <h4 className="font-medium text-sm">🤔 Why These Changes?</h4>
+              <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+                <li>
+                  <strong>Better Auth v1.3.34+</strong> introduced{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    databaseHooks
+                  </code>{" "}
+                  as the standard way to handle user lifecycle events
+                </li>
+                <li>
+                  <strong>@convex-dev/better-auth v0.9.6+</strong> removed the
+                  deprecated{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    triggers
+                  </code>
+                  configuration from{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    createClient
+                  </code>
+                </li>
+                <li>
+                  <strong>HTTP Action Context</strong>: OAuth callbacks run in
+                  HTTP action context which cannot directly access
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    ctx.db
+                  </code>
+                  , requiring{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    runMutation
+                  </code>{" "}
+                  calls
+                </li>
+                <li>
+                  <strong>Type Safety</strong>: Adding{" "}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    &lt;DataModel&gt;
+                  </code>{" "}
+                  generic to
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    createClient
+                  </code>{" "}
+                  ensures proper TypeScript inference
+                </li>
+              </ul>
+            </div>
+          </div>
         </DocSection>
 
         {/* Additional Resources */}
         <DocSection title="Additional Resources">
           <ul className="list-disc list-inside space-y-1 ml-4">
             <li>
-              <Link href="/api-reference" className="text-primary hover:underline">
+              <Link
+                href="/api-reference"
+                className="text-primary hover:underline"
+              >
                 API Reference
               </Link>
               {" - Comprehensive API documentation with code examples"}
             </li>
             <li>
-              <a href="https://docs.convex.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a
+                href="https://docs.convex.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
                 Convex Documentation
               </a>
               {" - Official Convex docs"}
             </li>
             <li>
-              <a href="https://better-auth.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a
+                href="https://better-auth.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
                 Better Auth Documentation
               </a>
               {" - Official Better Auth docs"}
             </li>
             <li>
-              <a href="https://nextjs.org/docs" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+              <a
+                href="https://nextjs.org/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
                 Next.js Documentation
               </a>
               {" - Official Next.js docs"}
             </li>
             <li>
-              See <code className="bg-muted px-1.5 py-0.5 rounded text-xs">CLAUDE.md</code> for comprehensive technical documentation
+              See{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                CLAUDE.md
+              </code>{" "}
+              for comprehensive technical documentation
             </li>
           </ul>
         </DocSection>
@@ -385,11 +676,17 @@ pnpm convex env set GOOGLE_CLIENT_SECRET your-secret --prod
   );
 };
 
-export default function DocumentationPage() {
+// Main Page Export - Server Component with cached content
+export default async function DocumentationPage() {
   return (
     <AppContainer>
-      <Header />
-      <DocumentationContent />
+      <Suspense
+        fallback={<div className="animate-pulse h-16 bg-muted rounded-lg" />}
+      >
+        <DocumentationClient>
+          <DocumentationContent />
+        </DocumentationClient>
+      </Suspense>
     </AppContainer>
   );
 }
