@@ -39,29 +39,82 @@ export default function SignUp() {
   };
 
   const handleSignUp = async () => {
-    const { data, error } = await authClient.signUp.email(
-      {
-        email,
-        password,
-        name: `${firstName} ${lastName}`,
-        image: image ? await convertImageToBase64(image) : "",
-      },
-      {
-        onRequest: () => {
-          setLoading(true);
+    // Client-side validation
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error("Please enter your first and last name");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Please enter your email");
+      return;
+    }
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+    if (password !== passwordConfirmation) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error } = await authClient.signUp.email(
+        {
+          email,
+          password,
+          name: `${firstName} ${lastName}`,
+          image: image ? await convertImageToBase64(image) : "",
         },
-        onSuccess: () => {
-          setLoading(false);
-        },
-        onError: async (ctx) => {
-          setLoading(false);
-          console.error(ctx.error);
-          console.error("response", ctx.response);
-          toast.error(ctx.error.message);
-        },
-      },
-    );
-    console.log({ data, error });
+        {
+          onRequest: () => {
+            setLoading(true);
+          },
+          onSuccess: () => {
+            setLoading(false);
+            toast.success("Account created successfully!");
+          },
+          onError: async (ctx) => {
+            setLoading(false);
+            // Try to extract a meaningful error message
+            let errorMessage = "Sign up failed. Please try again.";
+
+            if (ctx.error?.message) {
+              errorMessage = ctx.error.message;
+            } else if (ctx.response) {
+              try {
+                const text = await ctx.response.text();
+                if (text) {
+                  try {
+                    const json = JSON.parse(text);
+                    errorMessage = json.message || json.error || errorMessage;
+                  } catch {
+                    errorMessage = text;
+                  }
+                }
+              } catch {
+                // Response body already consumed or not available
+              }
+            }
+
+            console.error("Sign up error:", ctx.error);
+            console.error("Response:", ctx.response);
+            toast.error(errorMessage);
+          },
+        }
+      );
+
+      if (error) {
+        console.error("Sign up error result:", error);
+        toast.error(error.message || "Sign up failed");
+      } else if (data) {
+        console.log("Sign up success:", data);
+      }
+    } catch (err) {
+      setLoading(false);
+      console.error("Unexpected error during sign up:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   return (
