@@ -6,6 +6,7 @@
 [![Better Auth](https://img.shields.io/badge/Better%20Auth-Latest-green?style=flat)](https://better-auth.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/podalls97/next-convex-betterauth-template?utm_source=oss&utm_medium=github&utm_campaign=podalls97%2Fnext-convex-betterauth-template&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
 
 A **production-ready**, full-stack authentication template built with Next.js 16, Convex, and Better Auth. This template provides a complete authentication system with multiple auth methods, real-time database, comprehensive documentation, and API reference.
 
