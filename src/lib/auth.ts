@@ -11,8 +11,17 @@ import {
 import { magicLink } from "better-auth/plugins";
 import { betterAuth, BetterAuthOptions } from "better-auth";
 import { betterAuthComponent } from "../../convex/auth";
-import { requireRunMutationCtx } from "@convex-dev/better-auth/utils";
-import { GenericCtx } from "../../convex/_generated/server";
+import { requireMutationCtx } from "@convex-dev/better-auth/utils";
+import {
+  QueryCtx,
+  MutationCtx,
+  ActionCtx,
+} from "../../convex/_generated/server";
+import { internal } from "../../convex/_generated/api";
+
+type GenericCtx = QueryCtx | MutationCtx | ActionCtx;
+import { asyncMap } from "convex-helpers";
+import { Id } from "../../convex/_generated/dataModel";
 
 const siteUrl = process.env.SITE_URL;
 if (!siteUrl) {
@@ -37,7 +46,7 @@ const createOptions = (ctx: GenericCtx) =>
     },
     emailVerification: {
       sendVerificationEmail: async ({ user, url }) => {
-        await sendEmailVerification(requireRunMutationCtx(ctx) as any, {
+        await sendEmailVerification(requireMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -45,9 +54,11 @@ const createOptions = (ctx: GenericCtx) =>
     },
     emailAndPassword: {
       enabled: true,
-      requireEmailVerification: true,
+      // TODO: Set to true once RESEND_API_KEY is configured in Convex
+      // pnpm convex env set RESEND_API_KEY your-api-key
+      requireEmailVerification: false,
       sendResetPassword: async ({ user, url }) => {
-        await sendResetPassword(requireRunMutationCtx(ctx) as any, {
+        await sendResetPassword(requireMutationCtx(ctx) as any, {
           to: user.email,
           url,
         });
@@ -83,7 +94,7 @@ const createOptions = (ctx: GenericCtx) =>
       anonymous(),
       magicLink({
         sendMagicLink: async ({ email, url }) => {
-          await sendMagicLink(requireRunMutationCtx(ctx) as any, {
+          await sendMagicLink(requireMutationCtx(ctx) as any, {
             to: email,
             url,
           });
@@ -91,7 +102,7 @@ const createOptions = (ctx: GenericCtx) =>
       }),
       emailOTP({
         async sendVerificationOTP({ email, otp }) {
-          await sendOTPVerification(requireRunMutationCtx(ctx) as any, {
+          await sendOTPVerification(requireMutationCtx(ctx) as any, {
             to: email,
             code: otp,
           });
@@ -110,7 +121,50 @@ const createOptions = (ctx: GenericCtx) =>
         ],
       }),
     ],
-  }) satisfies BetterAuthOptions;
+    databaseHooks: {
+      user: {
+        create: {
+          after: async (user) => {
+            if ("runMutation" in ctx) {
+              await ctx.runMutation(internal.users.syncUserCreation, {
+                email: user.email,
+              });
+            } else if ("db" in ctx) {
+              await (ctx as MutationCtx).db.insert("users", {
+                email: user.email,
+              });
+            }
+          },
+        },
+        delete: {
+          after: async (user) => {
+            if ("runMutation" in ctx) {
+              await ctx.runMutation(internal.users.syncUserDeletion, {
+                email: user.email,
+              });
+            } else if ("db" in ctx) {
+              const mutationCtx = ctx as MutationCtx;
+              const appUser = await mutationCtx.db
+                .query("users")
+                .withIndex("email", (q) => q.eq("email", user.email))
+                .first();
+
+              if (appUser) {
+                const todos = await mutationCtx.db
+                  .query("todos")
+                  .withIndex("userId", (q) => q.eq("userId", appUser._id))
+                  .collect();
+                await asyncMap(todos, async (todo) => {
+                  await mutationCtx.db.delete(todo._id);
+                });
+                await mutationCtx.db.delete(appUser._id);
+              }
+            }
+          },
+        },
+      },
+    },
+  } satisfies BetterAuthOptions);
 
 export const createAuth = (ctx: GenericCtx) => {
   const options = createOptions(ctx);

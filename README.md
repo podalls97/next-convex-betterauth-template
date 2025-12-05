@@ -1,7 +1,7 @@
 # Next.js + Convex + Better Auth Template
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.0.1-black?style=flat&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.0-blue?style=flat&logo=react)](https://react.dev/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.0.7-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.2.1-blue?style=flat&logo=react)](https://react.dev/)
 [![Convex](https://img.shields.io/badge/Convex-Realtime-orange?style=flat&logo=convex)](https://convex.dev/)
 [![Better Auth](https://img.shields.io/badge/Better%20Auth-Latest-green?style=flat)](https://better-auth.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
@@ -14,6 +14,7 @@ A **production-ready**, full-stack authentication template built with Next.js 16
 ## 🚀 Features
 
 ### Authentication Methods
+
 - ✅ **Email/Password** - Traditional authentication with secure password handling
 - ✅ **OAuth Providers** - Google, GitHub, and Slack (via genericOAuth)
 - ✅ **Magic Links** - Passwordless authentication via email
@@ -22,6 +23,7 @@ A **production-ready**, full-stack authentication template built with Next.js 16
 - ✅ **Anonymous Auth** - Guest access for users
 
 ### Core Features
+
 - ✅ **Protected Routes** - Automatic route protection with Next.js 16 proxy pattern
 - ✅ **Email Verification** - Verify user emails with secure tokens
 - ✅ **Password Reset** - Secure password recovery flow
@@ -31,6 +33,7 @@ A **production-ready**, full-stack authentication template built with Next.js 16
 - ✅ **Email Templates** - Pre-built React Email templates for all auth flows
 
 ### Developer Experience
+
 - ✅ **Comprehensive Documentation** - Built-in `/documentation` page with setup guides
 - ✅ **API Reference** - Full API documentation at `/api-reference` with code examples
 - ✅ **Claude AI Ready** - Includes `CLAUDE.md` for AI coding assistants
@@ -49,6 +52,7 @@ A **production-ready**, full-stack authentication template built with Next.js 16
 ## 📋 Prerequisites
 
 Before you begin, ensure you have the following installed:
+
 - [Node.js](https://nodejs.org/) (v18 or later)
 - [pnpm](https://pnpm.io/) (recommended) or npm/yarn
 - [Convex CLI](https://docs.convex.dev/get-started/quickstart)
@@ -122,22 +126,26 @@ You'll need to set up the following services:
 #### 📧 Email Service (Choose one)
 
 **Option 1: Resend (Recommended)**
+
 - Sign up at [Resend](https://resend.com/)
 - Get your API key from the dashboard
 - Add `RESEND_API_KEY` to your environment variables in Convex
 
 **Option 2: SMTP (Gmail/Outlook)**
+
 - For Gmail: Enable 2FA and create an App Password
 - For Outlook: Use your regular credentials
 - Add SMTP variables to your environment
 
 #### 🔐 Better Auth Secret
+
 - Generate a secure random string using: `openssl rand -base64 32`
 - Add to `BETTER_AUTH_SECRET` in both `.env.local` and Convex
 
 #### 🔑 OAuth Providers (Optional)
 
 **Google OAuth**
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
 3. Navigate to "APIs & Services" > "Credentials"
@@ -150,6 +158,7 @@ You'll need to set up the following services:
 8. Copy `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`
 
 **GitHub OAuth**
+
 1. Go to [GitHub Developer Settings](https://github.com/settings/developers)
 2. Click "New OAuth App"
 3. Fill in the details:
@@ -161,6 +170,7 @@ You'll need to set up the following services:
 4. Copy `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`
 
 **Slack OAuth (via genericOAuth)**
+
 1. Go to [Slack API](https://api.slack.com/apps)
 2. Click "Create New App" > "From scratch"
 3. Configure OAuth & Permissions
@@ -171,12 +181,14 @@ You'll need to set up the following services:
 ### 5. Start Development
 
 #### Option 1: Start Everything (Recommended)
+
 ```bash
 # This will automatically start both Convex dev and Next.js dev
 pnpm dev
 ```
 
 #### Option 2: Start Convex Only
+
 ```bash
 # Start Convex development server only
 pnpm convex dev
@@ -188,8 +200,9 @@ pnpm convex dev --once
 **Note**: If you encounter errors after running `pnpm install` after cloning this repo, make sure you have added the required environment variables to your `.env.local` file, then run `pnpm convex env set` to set up the variables in Convex.
 
 The `pnpm dev` command will:
+
 - Start Convex development server
-- Start Next.js development server  
+- Start Next.js development server
 - Open your browser to `http://localhost:3000`
 
 ## 🎯 Quick Start Guide
@@ -229,6 +242,7 @@ convex/
 ├── auth.ts                  # Better Auth + Convex integration
 ├── schema.ts                # Convex database schema
 ├── http.ts                  # HTTP routes for Better Auth
+├── users.ts                 # Internal mutations for user syncing
 ├── email.tsx                # Email templates (React Email)
 └── polyfills.ts             # Required for Better Auth in Convex
 ```
@@ -294,6 +308,7 @@ pnpm convex deploy
 If you're working with AI coding assistants or need to modify authentication providers:
 
 ### Adding/Removing Auth Providers
+
 When adding or removing authentication providers (Google, GitHub, etc.):
 
 1. **Update Environment Variables**: Add or remove the corresponding `CLIENT_ID` and `CLIENT_SECRET` variables in both `.env.local` and Convex
@@ -302,6 +317,7 @@ When adding or removing authentication providers (Google, GitHub, etc.):
 4. **Test Authentication Flow**: Verify the complete authentication flow works with the changes
 
 ### Quick Provider Management
+
 - **To add a provider**: Configure the provider in `convex/auth.config.ts`, add environment variables, and update any related mutations
 - **To remove a provider**: Remove from auth config, clean up environment variables, and update mutations to handle the removal
 
@@ -327,4 +343,4 @@ If you encounter any issues:
 
 ---
 
-**Happy coding! :D**
+**Happy coding! :DD**

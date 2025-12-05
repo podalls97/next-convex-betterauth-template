@@ -1,43 +1,9 @@
-"use client";
+"use cache";
 
-import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
+import { Suspense } from "react";
 import Link from "next/link";
-import {
-  AppContainer,
-  AppHeader,
-  AppNav,
-  SettingsButton,
-  SettingsButtonContent,
-  UserProfile,
-} from "@/components/server";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { SignOutButton } from "@/components/client";
-
-const Header = () => {
-  const router = useRouter();
-  const user = useQuery(api.auth.getCurrentUser);
-
-  const handleSignOut = async () => {
-    await authClient.signOut();
-    router.push("/sign-in");
-  };
-
-  return (
-    <AppHeader>
-      <UserProfile user={user} />
-      <AppNav>
-        <SettingsButton>
-          <Link href="/settings">
-            <SettingsButtonContent />
-          </Link>
-        </SettingsButton>
-        <SignOutButton onClick={handleSignOut} />
-      </AppNav>
-    </AppHeader>
-  );
-};
+import { AppContainer } from "@/components/server";
+import { ApiReferenceClient } from "./client";
 
 const ApiEndpoint = ({
   method,
@@ -122,6 +88,7 @@ const ApiSection = ({
   );
 };
 
+// Cached API Reference content
 const ApiReferenceContent = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -167,9 +134,21 @@ const user = useQuery(api.auth.getCurrentUser);
             path="authClient.signIn.email()"
             description="Sign in with email and password"
             params={[
-              { name: "email", type: "string", description: "User's email address" },
-              { name: "password", type: "string", description: "User's password" },
-              { name: "rememberMe", type: "boolean?", description: "Keep user signed in (optional)" },
+              {
+                name: "email",
+                type: "string",
+                description: "User's email address",
+              },
+              {
+                name: "password",
+                type: "string",
+                description: "User's password",
+              },
+              {
+                name: "rememberMe",
+                type: "boolean?",
+                description: "Keep user signed in (optional)",
+              },
             ]}
             example={`import { authClient } from "@/lib/auth-client";
 
@@ -189,9 +168,21 @@ if (error) {
             path="authClient.signUp.email()"
             description="Create a new account with email and password"
             params={[
-              { name: "email", type: "string", description: "User's email address" },
-              { name: "password", type: "string", description: "User's password (min 8 chars)" },
-              { name: "name", type: "string", description: "User's display name" },
+              {
+                name: "email",
+                type: "string",
+                description: "User's email address",
+              },
+              {
+                name: "password",
+                type: "string",
+                description: "User's password (min 8 chars)",
+              },
+              {
+                name: "name",
+                type: "string",
+                description: "User's display name",
+              },
             ]}
             example={`import { authClient } from "@/lib/auth-client";
 
@@ -213,8 +204,16 @@ if (error) {
             path="authClient.signIn.social()"
             description="Sign in with OAuth providers (Google, GitHub, Slack)"
             params={[
-              { name: "provider", type: "'google' | 'github' | 'slack'", description: "OAuth provider name" },
-              { name: "callbackURL", type: "string?", description: "Redirect URL after auth (optional)" },
+              {
+                name: "provider",
+                type: "'google' | 'github' | 'slack'",
+                description: "OAuth provider name",
+              },
+              {
+                name: "callbackURL",
+                type: "string?",
+                description: "Redirect URL after auth (optional)",
+              },
             ]}
             example={`import { authClient } from "@/lib/auth-client";
 
@@ -235,7 +234,11 @@ await authClient.signIn.social({
             path="authClient.signIn.magicLink()"
             description="Send a magic link to user's email for passwordless authentication"
             params={[
-              { name: "email", type: "string", description: "User's email address" },
+              {
+                name: "email",
+                type: "string",
+                description: "User's email address",
+              },
             ]}
             example={`import { authClient } from "@/lib/auth-client";
 
@@ -394,10 +397,14 @@ export const createItem = mutation({
           <div className="border rounded-lg p-6 space-y-3">
             <h3 className="text-sm font-medium">Creating Custom Functions</h3>
             <p className="text-sm text-muted-foreground">
-              Add your own Convex functions in the <code className="bg-muted px-1.5 py-0.5 rounded text-xs">convex/</code> directory:
+              Add your own Convex functions in the{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                convex/
+              </code>{" "}
+              directory:
             </p>
             <pre className="bg-muted p-4 rounded text-xs font-mono overflow-x-auto">
-{`// convex/myModule.ts
+              {`// convex/myModule.ts
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
@@ -421,7 +428,7 @@ export const myMutation = mutation({
               Then use them in your components:
             </p>
             <pre className="bg-muted p-4 rounded text-xs font-mono overflow-x-auto">
-{`import { useQuery, useMutation } from "convex/react";
+              {`import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 const data = useQuery(api.myModule.myQuery, { id });
@@ -439,8 +446,16 @@ await mutate({ name: "value" });`}
             path="useQuery(api.module.function, args)"
             description="Subscribe to a Convex query that updates in real-time"
             params={[
-              { name: "function", type: "QueryReference", description: "The query function to call" },
-              { name: "args", type: "object", description: "Arguments to pass to the query" },
+              {
+                name: "function",
+                type: "QueryReference",
+                description: "The query function to call",
+              },
+              {
+                name: "args",
+                type: "object",
+                description: "Arguments to pass to the query",
+              },
             ]}
             example={`const data = useQuery(api.module.myQuery, { id: "123" });
 // data updates automatically when database changes
@@ -456,7 +471,11 @@ return <div>{data.name}</div>;`}
             path="useMutation(api.module.function)"
             description="Get a mutation function to modify data"
             params={[
-              { name: "function", type: "MutationReference", description: "The mutation function to call" },
+              {
+                name: "function",
+                type: "MutationReference",
+                description: "The mutation function to call",
+              },
             ]}
             example={`const mutate = useMutation(api.module.myMutation);
 
@@ -477,7 +496,11 @@ const handleSubmit = async (e: FormEvent) => {
             path="useAction(api.module.function)"
             description="Get an action function for long-running or external operations"
             params={[
-              { name: "function", type: "ActionReference", description: "The action function to call" },
+              {
+                name: "function",
+                type: "ActionReference",
+                description: "The action function to call",
+              },
             ]}
             example={`const action = useAction(api.module.myAction);
 
@@ -883,7 +906,10 @@ if (!authUser) throw new Error("Unauthorized");
           <h3 className="text-sm font-medium mb-3">Additional Resources</h3>
           <ul className="text-sm text-muted-foreground space-y-2">
             <li>
-              <Link href="/documentation" className="hover:text-foreground underline">
+              <Link
+                href="/documentation"
+                className="hover:text-foreground underline"
+              >
                 Project Documentation
               </Link>
               {" - Setup guide and architecture overview"}
@@ -928,11 +954,18 @@ if (!authUser) throw new Error("Unauthorized");
   );
 };
 
-export default function ApiReferencePage() {
+// Main Page Export - Server Component with cached content
+export default async function ApiReferencePage() {
+  "use cache";
   return (
     <AppContainer>
-      <Header />
-      <ApiReferenceContent />
+      <Suspense
+        fallback={<div className="animate-pulse h-16 bg-muted rounded-lg" />}
+      >
+        <ApiReferenceClient>
+          <ApiReferenceContent />
+        </ApiReferenceClient>
+      </Suspense>
     </AppContainer>
   );
 }

@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="w-full border-t border-border text-sm text-muted-foreground">
       <div className="mx-auto w-full max-w-6xl px-2 md:px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
         <p className="text-center sm:text-left">
-          © {new Date().getFullYear()} Podalls —
+          © 2025 Podalls —
           <Link
             href="https://github.com/podalls97/next-convex-betterauth-template/blob/main/LICENSE"
             target="_blank"
@@ -29,5 +29,3 @@ export function Footer() {
     </footer>
   );
 }
-
-
