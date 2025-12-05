@@ -19,7 +19,7 @@ const getSession = async (request: NextRequest) => {
   return session;
 };
 
-const signInRoutes = ["/sign-in", "/sign-up", "/verify-2fa"];
+const signInRoutes = ["/sign-in", "/sign-up", "/verify-2fa", "/reset-password"];
 
 // Just check cookie, recommended approach
 export default async function proxy(request: NextRequest) {
